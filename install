@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+var spawn = require('child_process').spawn;
+
+// Do some windows checks to make sure we're executing the right commands
+var npm = (process.platform === "win32" ? "npm.cmd" : "npm");
+var jspm = (process.platform === "win32" ? "jspm.cmd" : "jspm");
+var npmChild = spawn(npm, ["install"]);
+
+npmChild.on('close', function (code) {
+  if (code !== 0) {
+    console.log('npm process exited with code ' + code);
+  } else {
+    // Spawn
+    var jspmChild = spawn(jspm, ["install"]);
+    // Output to the cli
+    jspmChild.stdout.on('data', function (data) { console.log(data.toString()); });
+    jspmChild.stderr.on('data', function (data) { console.log(data.toString()); });
+    jspmChild.on('error', function() { console.log(arguments); });
+    jspmChild.stdin.end();
+  }
+  npmChild.stdin.end();
+});
+
+npmChild.stdout.on('data', function (data) { console.log(data.toString()); });
+npmChild.stderr.on('data', function (data) { console.log(data.toString()); });
+npmChild.on('error', function() { console.log(arguments); });
